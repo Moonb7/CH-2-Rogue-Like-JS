@@ -19,7 +19,7 @@ function displayLobby() {
     );
 
     // 상단 경계선
-    const line = chalk.magentaBright('='.repeat(50));
+    const line = chalk.magentaBright('='.repeat(50)); // =============그리기
     console.log(line);
 
     // 게임 이름
