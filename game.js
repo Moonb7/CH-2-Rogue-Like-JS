@@ -48,7 +48,7 @@ class Player extends Character {
 
   async Skill_Fireball(target, logs, count) {
     this.mp--;
-    await LoadDelay(2000,`..점점 커지는 중..`);
+    await LoadDelay(2000, `..점점 커지는 중..`);
     const skillAtk = Math.floor((Math.random() * (this.maxAtt - this.minAtt) + this.minAtt)) * 3; // 3배 공격
     target.hp -= skillAtk;
     logs.push(chalk.blueBright(`[${count}] 몬스터에게 ${skillAtk}의 마법피해를 입혔습니다.`));
@@ -58,11 +58,11 @@ class Player extends Character {
     let str = "";
     let num = 0;
 
-    let rand = Math.floor(Math.random() * 10 + 1);
-    if (rand === 1) { // 만약 10% 확률에 걸리면 마나획득
+    let rand = Math.floor(Math.random() * 100 + 1);
+    if (rand <= 20) { // 만약 20% 확률에 걸리면 마나획득
       num = 1;
       this.mp += num;
-      str = `마나가 ${num}`;
+      str = `마나를 ${num}`;
     }
     else {
       rand = Math.floor(Math.random() * 6 + 1);
@@ -120,7 +120,7 @@ class Player extends Character {
 class Monster extends Character {
   constructor(hp, minAtt, stage) {
     super(hp, minAtt);
-    this.hp = hp * stage; // hp의 75퍼센트에 stage를 곱해서 다음 스테이지로 갈때 좀 더 강력해지게 했습니다.
+    this.hp = hp * stage;
     this.minAtt = this.minAtt * stage;
     this.maxAtt = this.maxAtt * stage;
     this._stage = stage;
@@ -158,7 +158,7 @@ function displayStatus(stage, player, monster) {
 // 실제 배틀이 이루어지는 함수
 const battle = async (stage, player, monster) => {
   let logs = [];
-  let count = 0; // 행동한 횟수
+  let count = 0; // 행동한 횟수 음음
 
   // 스테이지에 올라갈때마다
   if (stage > 1)
@@ -181,7 +181,7 @@ const battle = async (stage, player, monster) => {
 
     console.log(
       chalk.green(
-        `\n1. 공격한다 2. 연속 공격 (${player.doubleAtk}%) 3. 방어한다 (${player.defence}%) 4. 도망친다 (${player.run}%) 5. 스킬`,
+        `\n1. 공격한다 2. 연속 공격 (${player.doubleAtk}%) 3. 방어한다 (${player.defence}%) 4. 도망친다 (${player.run}%) 5. 스킬사용`,
       ),
     );
 
@@ -226,9 +226,8 @@ const battle = async (stage, player, monster) => {
         break;
 
       case '5':
-        count++;
         if (player.mp <= 0) {
-          logs.push(chalk.green(`[${count}] 마나가 부족합니다.`));
+          await LoadDelay(500, chalk.gray(`마나가 부족합니다.`));
           break;
         }
 
@@ -240,12 +239,17 @@ const battle = async (stage, player, monster) => {
         choice = readlineSync.question('스킬을 선택하세요 ');
         switch (choice) {
           case '1':
+            count++;
             logs.push(chalk.green(`[${count}] 화염구를 만들고 있습니다.`));
             reLog();
             await player.Skill_Fireball(monster, logs, count);
+            monster.attack(player, logs, count);
             break;
+
+          default:
+            logs.push(chalk.gray(`${choice}를 선택하셨습니다.`));
+            logs.push(chalk.red(`올바른 선택을 하세요`));
         }
-        monster.attack(player, logs, count);
         break;
       default:
         logs.push(chalk.gray(`${choice}를 선택하셨습니다.`));
