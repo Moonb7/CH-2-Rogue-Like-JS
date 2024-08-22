@@ -1,21 +1,29 @@
 import chalk from 'chalk';
 import readlineSync from 'readline-sync';
+import { start } from "./server.js";
 
 class Character {
-  constructor(hp, minAtt, maxAtt) {
+  constructor(hp, minAtt) {
     this.hp = hp;
+    this.attack_Multiplier = 1.5;
     this.minAtt = minAtt;
-    this.maxAtt = maxAtt;
-    this.att;
+    this.maxAtt = Math.floor(this.minAtt * this.attack_Multiplier); // 최소 공격력에 일정 배율을 곱해주어 최대공격력을 구했습니다.
   }
 
   attack(target) {
-    this.att = Math.floor(Math.random() * (this.maxAtt - this.minAtt) + this.minAtt);
-    target.hp -= this.att;
   }
 }
 
 class Player extends Character {
+  constructor(hp, minAtt, doubleAtk, defence, run) {
+    super(hp, minAtt);
+    this.doubleAtk = doubleAtk;
+    this.defence = defence;
+    this.run = run;
+
+    // mp 추가
+    this.mp = 2;
+  }
   Heal(amount, logs) {
     const randNum = Math.floor(Math.random() * amount);
     this.hp += randNum;
@@ -23,57 +31,114 @@ class Player extends Character {
   }
 
   attack(target, logs, count) {
-    this.att = Math.floor(Math.random() * (this.maxAtt - this.minAtt) + this.minAtt);
-    target.hp -= this.att;
-    logs.push(chalk.green(`[${count}] 몬스터에게 ${this.att}의 피해를 입혔습니다.`));
+    let atk = Math.floor(Math.random() * (this.maxAtt - this.minAtt) + this.minAtt);
+    target.hp -= atk;
+    logs.push(chalk.green(`[${count}] 몬스터에게 ${atk}의 피해를 입혔습니다.`));
+  }
+
+  Defence(result, target, logs, count) {
+    if (result) {
+      const defenceAtk = Math.floor((Math.random() * (this.maxAtt - this.minAtt) + this.minAtt) * 0.6);
+      target.hp -= defenceAtk;
+      logs.push(chalk.cyanBright(`[${count}] 몬스터에게 ${defenceAtk}의 방어피해를 입혔습니다.`));
+    } else {
+      logs.push(chalk.gray(`[${count}] 몬스터에게 방어에 실패했습니다.`));
+    }
+  }
+
+  async Skill_Fireball(target, logs, count) {
+    this.mp--;
+    await LoadDelay(2000,`..점점 커지는 중..`);
+    const skillAtk = Math.floor((Math.random() * (this.maxAtt - this.minAtt) + this.minAtt)) * 3; // 3배 공격
+    target.hp -= skillAtk;
+    logs.push(chalk.blueBright(`[${count}] 몬스터에게 ${skillAtk}의 마법피해를 입혔습니다.`));
   }
 
   ClearReward() {
-    const rand = Math.floor(Math.random() * 6);
-    switch (rand) {
-      case 0: // 최대 체력 배율로 증가시키기
-        this.hp = this.hp;
-        break;
+    let str = "";
+    let num = 0;
 
-      case 1: // 최소 공격력 배율로 증가시키기
-        this.minAtt = this.minAtt;
-        break;
-
-      case 2: // 최대 공격력 배율로 증가시키기
-
-        break;
-
-      case 3: // 연속 공격확률업
-
-        break;
-
-      case 4: // 방어 확률업
-
-        break;
-
-      case 5: // 도망 확률업
-
-        break;
+    let rand = Math.floor(Math.random() * 10 + 1);
+    if (rand === 1) { // 만약 10% 확률에 걸리면 마나획득
+      num = 1;
+      this.mp += num;
+      str = `마나가 ${num}`;
     }
+    else {
+      rand = Math.floor(Math.random() * 6 + 1);
+      switch (rand) {
+        case 1: // 최대 체력 증가시키기        
+          num = Math.floor(Math.random() * (50 - 20 + 1) + 20);
+          this.hp += num;
+
+          str = `체력이 ${num}`;
+          break;
+
+        case 2: // 최소 공격력 증가시키기
+          num = Math.floor(Math.random() * (20 - 5 + 1) + 5);
+          this.minAtt += num;
+          this.maxAtt = Math.floor(this.minAtt * this.attack_Multiplier);
+
+          str = `최소 공격력이 ${num}`;
+          break;
+
+        case 3: // 공격력 배율 증가시키기        
+          const randomValue = Math.random() * (1 - 0.1) + 0.1;
+          num = Math.round(randomValue * 100) / 100; // 소수점 2자리까지 구하기
+          this.attack_Multiplier += num;
+          this.maxAtt = Math.floor(this.minAtt * this.attack_Multiplier);
+
+          str = `최대 공격력 배율이 ${num}`;
+          break;
+
+        case 4: // 연속 공격확률업        
+          num = Math.floor(Math.random() * (7 - 3 + 1) + 3);
+          this.doubleAtk += num;
+
+          str = `연속 공격확률이 ${num}%`;
+          break;
+
+        case 5: // 방어 확률업
+          num = Math.floor(Math.random() * (10 - 3 + 1) + 3);
+          this.defence += num;
+
+          str = `방어 확률이 ${num}%`;
+          break;
+
+        case 6: // 도망 확률업
+          num = Math.floor(Math.random() * (3 - 1 + 1) + 1);
+          this.run += num;
+
+          str = `도망 확률이 ${num}%`;
+          break;
+      }
+    }
+    console.log(chalk.yellowBright(`${str} 증가했습니다.`));
   }
 }
 
 class Monster extends Character {
-  constructor(hp, minAtt, maxAtt, stage) {
-    super(hp, minAtt, maxAtt);
-    this.hp = hp + Math.floor(hp * 0.5 * stage);
-    this.minAtt = Math.floor(minAtt + (minAtt * 0.5 * stage));
-    this.maxAtt = Math.floor(maxAtt + (maxAtt * 0.5 * stage));
-    this.stage = stage;
+  constructor(hp, minAtt, stage) {
+    super(hp, minAtt);
+    this.hp = hp * stage; // hp의 75퍼센트에 stage를 곱해서 다음 스테이지로 갈때 좀 더 강력해지게 했습니다.
+    this.minAtt = this.minAtt * stage;
+    this.maxAtt = this.maxAtt * stage;
+    this._stage = stage;
+  }
+  get stage() {
+    return this._stage;
   }
 
   attack(target, logs, count) {
-    this.att = Math.floor(Math.random() * (this.maxAtt - this.minAtt) + this.minAtt);
-    target.hp -= this.att;
-    logs.push(chalk.red(`[${count}] 몬스터가 ${this.att}의 피해를 입혔습니다.`));
+    if (this.hp > 0) {
+      let atk = Math.floor(Math.random() * (this.maxAtt - this.minAtt) + this.minAtt);
+      target.hp -= atk;
+      logs.push(chalk.red(`[${count}] 몬스터가 ${atk}의 피해를 입혔습니다.`));
+    } else {
+      logs.push(chalk.bgBlue(`[${count}] 몬스터를 처치했습니다.`));
+    }
   }
 }
-
 
 // 플레이어와 몬스터 정보 출력 함수
 function displayStatus(stage, player, monster) {
@@ -81,7 +146,7 @@ function displayStatus(stage, player, monster) {
   console.log(
     chalk.cyanBright(`| Stage: ${stage} `) +
     chalk.blueBright(
-      `| 플레이어 정보 HP : ${player.hp}, Attack : ${player.minAtt}-${player.maxAtt}`,
+      `| 플레이어 정보 HP : ${player.hp}, Attack : ${player.minAtt}-${player.maxAtt}, Mp : ${player.mp} `,
     ) +
     chalk.redBright(
       `| 몬스터 정보 HP : ${monster.hp}, Attack : ${monster.minAtt}-${monster.maxAtt}|`,
@@ -98,92 +163,150 @@ const battle = async (stage, player, monster) => {
   // 스테이지에 올라갈때마다
   if (stage > 1)
     player.Heal(20, logs);
+
   logs.push(chalk.magenta(`야생의 몬스터와 마추졌습니다!!\n`));
 
-  while (player.hp > 0) {
+  let reLog = function () {
     console.clear();
     displayStatus(stage, player, monster);
     logs.forEach((log) => console.log(log));
+  };
 
-    // 몬스터가 죽으면 반복멈추기
-    if (monster.hp <= 0) {
-      await NextStageLoding(`스테이지 이동 중....`);
+  while (player.hp > 0) {
+    reLog();
+
+    // 클리어 조건
+    if (monster.hp <= 0)
       break;
-    }
 
     console.log(
       chalk.green(
-        `\n1. 공격한다 2. 도망친다`,
+        `\n1. 공격한다 2. 연속 공격 (${player.doubleAtk}%) 3. 방어한다 (${player.defence}%) 4. 도망친다 (${player.run}%) 5. 스킬`,
       ),
     );
-    const choice = readlineSync.question('당신의 선택은? ');
+
+    let choice = readlineSync.question('당신의 선택은? ');
     switch (choice) {
       case '1': // 일반 공격
         count++;
         player.attack(monster, logs, count);
-        if (monster.hp > 0) {
-          monster.attack(player, logs, count);
+
+        monster.attack(player, logs, count);
+        break;
+
+      case '2': // 더블 공격
+        count++;
+        if (Probability(player.doubleAtk)) {
+          logs.push(chalk.green(`[${count}] 연속공격에 성공했습니다.`));
+          player.attack(monster, logs, count);
+          player.attack(monster, logs, count);
         } else {
-          logs.push(chalk.green(`[${count}] 몬스터를 처치했습니다.`));
+          logs.push(chalk.green(`[${count}] 연속공격에 실패했습니다.`));
+        }
+
+        monster.attack(player, logs, count);
+
+        break;
+
+      case '3': // 방어하기
+        count++;
+        let result = Probability(player.defence);
+        player.Defence(result, monster, logs, count);
+
+        if (result === false) {
+          monster.attack(player, logs, count);
         }
         break;
-      case '2': // 도망
+
+      case '4': // 도망가자-선우정아
         count++;
-        // logs.push(chalk.red(`[${count}] 도망가자~저멀리~`));
-        // monster.hp = 0; // 몬스터를 0으로만들어 클리어 조건으로 완성
-        await Escape(30, monster);
+        logs.push(chalk.green(`[${count}] 도망을 시도합니다....`));
+        reLog();
+        await Escape(Probability(player.run), monster, logs, count);
+        break;
+
+      case '5':
+        count++;
+        if (player.mp <= 0) {
+          logs.push(chalk.green(`[${count}] 마나가 부족합니다.`));
+          break;
+        }
+
+        console.log(
+          chalk.green(
+            `\n1. 파이어볼`,
+          ),
+        );
+        choice = readlineSync.question('스킬을 선택하세요 ');
+        switch (choice) {
+          case '1':
+            logs.push(chalk.green(`[${count}] 화염구를 만들고 있습니다.`));
+            reLog();
+            await player.Skill_Fireball(monster, logs, count);
+            break;
+        }
+        monster.attack(player, logs, count);
         break;
       default:
         logs.push(chalk.gray(`${choice}를 선택하셨습니다.`));
         logs.push(chalk.red(`올바른 선택을 하세요`));
     }
   }
+  reLog();
 };
 
 // 확률의 성공여부를 확인하는 함수
-function Probability(probability,) {
-  const rand = Math.floor(Math.random() * 101); // 0 ~ 100까지수 추출
+function Probability(probability) {
+  const rand = Math.floor(Math.random() * 100) + 1; // 1 ~ 100까지수 추출
   if (rand <= probability) { // 정한 확률보다 작거나 같으면(확률범위에 들어오면) 성공
-    console.log(chalk.greenBright(`확률에 성공하였습니다.`));
     return true;
   }
-  console.log(chalk.greenBright(`확률에 실패했습니다.`));
   return false;
 }
 
 // 도망 함수
-async function Escape(probability, monster) {
+async function Escape(result, monster, logs, count) {
+  // 1초뒤에 스테이지 클리어 조건 실행
   return new Promise(function (resolve) {
     setTimeout(() => {
-      const result = Probability(probability);
-      console.log(result);
+      result ? logs.push(chalk.bgBlue(`성공적으로 도망쳤습니다!!`)) : logs.push(chalk.gray(`[${count}] 도망에 실패 하였습니다.`));
       if (result) {
         monster.hp = 0;
       }
-    }, 0);
+      resolve(result);
+    }, 1000);
   })
 }
 
-// 스테이지를 넘어가는 표현을 하기 위해 만든 함수
-async function NextStageLoding(str) {
-  console.log(chalk.green(str));
+// 딜레이 표현을 하기 위해 만든 함수
+async function LoadDelay(Time, str = "") {
+  console.log(str);
   return new Promise(function (resolve) {
-    setTimeout(() => resolve("테스트"), 2000);
+    setTimeout(() => resolve(), Time);
   });
 }
 
 // 게임을 시작하는 함수
 export async function startGame() {
   console.clear();
-  const player = new Player(100, 5, 20);
+  const player = new Player(100, 5, 25, 55, 50);
   let stage = 1;
 
   while (stage <= 10) {
-    const monster = new Monster(15, 2, 5, stage);
+    const monster = new Monster(15, 2, stage);
     await battle(stage, player, monster);
 
     // 스테이지 클리어 및 게임 종료 조건
-    // 여기는 음 그런거 공격력, 체력, 방어력 올리는 보상 reward
+    if (player.hp > 0) {
+      player.ClearReward();
+      await LoadDelay(2000, `${chalk.greenBright(`스테이지 이동 중....`)}`);
+    } else {
+      await LoadDelay(2000, `${chalk.bgRed(`플레이어가 죽었습니다...`)}`);
+      break;
+    }
+
     stage++;
   }
+  console.clear();
+  start();
 }

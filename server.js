@@ -74,7 +74,7 @@ function handleUserInput() {
 }
 
 // 게임 시작 함수
-function start() {
+export function start() {
     displayLobby();
     handleUserInput();
 }
