@@ -240,7 +240,7 @@ const battle = async (stage, player, monster) => {
         switch (choice) {
           case '1':
             count++;
-            logs.push(chalk.green(`[${count}] 화염구를 만들고 있습니다.`));
+            logs.push(chalk.green(`[${count}] 화염구를 만들기 시작했습니다!!`));
             reLog();
             await player.Skill_Fireball(monster, logs, count);
             monster.attack(player, logs, count);
