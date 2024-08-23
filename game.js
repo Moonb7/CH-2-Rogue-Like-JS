@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import readlineSync from 'readline-sync';
 import { start } from "./server.js";
-import { AchievementLog } from "./server.js";
 import { AchievementPush } from "./server.js";
 
 class Character {
@@ -232,8 +231,8 @@ const battle = async (stage, player, monster) => {
         reLog();
         result = Probability(player.run);
         await Escape(result, monster, logs, count, player);
-        
-        if(result === false){
+
+        if (result === false) {
           monster.attack(player, logs, count);
         }
         break;
@@ -271,6 +270,7 @@ const battle = async (stage, player, monster) => {
   }
   reLog();
 };
+
 
 // 확률의 성공여부를 확인하는 함수
 function Probability(probability) {
@@ -324,7 +324,7 @@ export async function startGame() {
     } else {
       await LoadDelay(2000, `${chalk.bgRed(`플레이어가 죽었습니다...`)}`);
       break;
-    }    
+    }
   }
   console.clear();
   start();
@@ -332,26 +332,23 @@ export async function startGame() {
 
 // 업적 달성 조건을 보고 업적달성하는 함수
 const AchievementFunc = {
-  StageClearAchievement : async function (stage) {
-    if (stage > 1 && stage <= 2)
-      {
-        AchievementPush('첫 스테이지 클리어', '1.', " 첫 스테이지 클리어")
-      } else if(stage >= 11) {
-        AchievementPush('킹 슬레이어', '2.', " 킹 슬레이어");
-      }
+  StageClearAchievement: async function (stage) {
+    if (stage > 1 && stage <= 2) {
+      AchievementPush('첫 스테이지 클리어', '1.', " 첫 스테이지 클리어")
+    } else if (stage >= 11) {
+      AchievementPush('킹 슬레이어', '2.', " 킹 슬레이어");
+    }
   },
-  SorcererAchievement : async function (player) {
-    if (player.Num_of_skill_uses === 1)
-      {
-        AchievementPush('당신은 마법사?', '3.', " 신입 마법사");
-      } else if(player.Num_of_skill_uses === 5) {
-        AchievementPush('대마법사', '4.', " 대마법사");
-      }
+  SorcererAchievement: async function (player) {
+    if (player.Num_of_skill_uses === 1) {
+      AchievementPush('당신은 마법사?', '3.', " 당신은 마법사?");
+    } else if (player.Num_of_skill_uses === 5) {
+      AchievementPush('대마법사', '4.', " 대마법사");
+    }
   },
-  RunAchievement : async function (player) {
-    if (player.Num_of_run_uses === 5 )
-      {
-        AchievementPush('도망자', '5.', " 도망가자-선우정아");
-      }
+  RunAchievement: async function (player) {
+    if (player.Num_of_run_uses === 5) {
+      AchievementPush('도망자', '5.', " 도망가자-선우정아");
+    }
   }
 }; 

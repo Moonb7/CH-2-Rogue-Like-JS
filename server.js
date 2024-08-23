@@ -73,20 +73,20 @@ function handleUserInput() {
     }
 }
 
-export const AchievementLog = [];
-
+const Achievement = [];
 export function AchievementPush(str, AchievementNum, AchievementStr) {
-    if (AchievementLog.includes(chalk.magenta(AchievementNum) + AchievementStr) === false) {
+    if (Achievement.includes(chalk.magenta(AchievementNum) + AchievementStr) === false) {
         console.log(chalk.bgGray(`\n업적 : ${str}\n`));
-        AchievementLog.push(chalk.magenta(AchievementNum) + AchievementStr);
+        Achievement.push(chalk.magenta(AchievementNum) + AchievementStr);
     }
 }
 
+// 업적창을 띄어주는 함수입니다.
 function ChllengeSuccessDisplay() {
     console.clear();
     console.log(chalk.bgRedBright('===================달성 업적===================\n'));
-    AchievementLog.sort();
-    AchievementLog.forEach((log) => console.log(log));
+    Achievement.sort();
+    Achievement.forEach((log) => console.log(log));
 
     console.log(chalk.yellow('\n메인 메뉴로 돌아가기 1을 입력하세요...'));
     const choice = readlineSync.question('입력: ');
