@@ -53,9 +53,9 @@ function handleUserInput() {
             startGame();
             break;
         case '2':
-            console.log(chalk.yellow('구현 준비중입니다.. 게임을 시작하세요'));
+            // console.log(chalk.yellow('구현 준비중입니다.. 게임을 시작하세요'));
             // 업적 확인하기 로직을 구현
-            handleUserInput();
+            ChllengeSuccessDisplay();
             break;
         case '3':
             console.log(chalk.blue('구현 준비중입니다.. 게임을 시작하세요'));
@@ -70,6 +70,35 @@ function handleUserInput() {
         default:
             console.log(chalk.red('올바른 선택을 하세요.'));
             handleUserInput(); // 유효하지 않은 입력일 경우 다시 입력 받음
+    }
+}
+
+export const AchievementLog = [];
+
+export function AchievementPush(str, AchievementNum, AchievementStr) {
+    if (AchievementLog.includes(chalk.magenta(AchievementNum) + AchievementStr) === false) {
+        console.log(chalk.bgGray(`\n업적 : ${str}\n`));
+        AchievementLog.push(chalk.magenta(AchievementNum) + AchievementStr);
+    }
+}
+
+function ChllengeSuccessDisplay() {
+    console.clear();
+    console.log(chalk.bgRedBright('===================달성 업적===================\n'));
+    AchievementLog.sort();
+    AchievementLog.forEach((log) => console.log(log));
+
+    console.log(chalk.yellow('\n메인 메뉴로 돌아가기 1을 입력하세요...'));
+    const choice = readlineSync.question('입력: ');
+    switch (choice) {
+        case '1':
+            console.log(chalk.green('게임을 시작합니다.'));
+            // 여기에서 새로운 게임 시작 로직을 구현
+            start();
+            break;
+        default:
+            console.log(chalk.red('올바른 선택을 하세요.'));
+            ChllengeSuccessDisplay(); // 유효하지 않은 입력일 경우 다시 입력 받음
     }
 }
 
