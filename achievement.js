@@ -1,11 +1,10 @@
 import chalk from 'chalk';
-import figlet from 'figlet';
 import readlineSync from 'readline-sync';
 
 const achievement = [];
 
 // 업적창을 띄어주는 함수입니다.
-export async function ChllengeSuccessDisplay() {
+export async function chllengeSuccessDisplay() {
     console.clear();
     console.log(chalk.bgRedBright('===================달성 업적===================\n'));
     achievement.sort();
@@ -19,7 +18,7 @@ export async function ChllengeSuccessDisplay() {
             break;
         default:
             await loadDelay(600, chalk.gray(`올바른 값을 입력해주세요.`));
-            await ChllengeSuccessDisplay(); // 유효하지 않은 입력일 경우 다시 입력 받음
+            await chllengeSuccessDisplay(); // 유효하지 않은 입력일 경우 다시 입력 받음
     }
 }
 

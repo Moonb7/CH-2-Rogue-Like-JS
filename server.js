@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import figlet from 'figlet';
 import readlineSync from 'readline-sync';
 import { startGame } from "./game.js";
-import { ChllengeSuccessDisplay } from "./achievement.js";
+import { chllengeSuccessDisplay } from "./achievement.js";
 
 // 로비 화면을 출력하는 함수
 function displayLobby() {
@@ -56,7 +56,7 @@ async function handleUserInput() {
         case '2':
             // console.log(chalk.yellow('구현 준비중입니다.. 게임을 시작하세요'));
             // 업적 확인하기 로직을 구현
-            await ChllengeSuccessDisplay();
+            await chllengeSuccessDisplay();
             break;
         case '3':
             console.log(chalk.blue('구현 준비중입니다.. 게임을 시작하세요'));
