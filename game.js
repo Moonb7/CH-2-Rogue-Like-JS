@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import readlineSync from 'readline-sync';
-import { start } from "./server.js";
-import { AchievementPush } from "./server.js";
+import { achievementFunc } from "./achievement.js";
 
 class Character {
   constructor(hp, minAtt) {
@@ -16,7 +15,7 @@ class Character {
 }
 
 class Player extends Character {
-  constructor(hp, minAtt, doubleAtk, defence, run) {
+  constructor(hp = 100, minAtt = 5, doubleAtk = 25, defence = 55, run = 20) {
     super(hp, minAtt);
     this.doubleAtk = doubleAtk;
     this.defence = defence;
@@ -25,11 +24,11 @@ class Player extends Character {
     this.mp = 2;
     // 업적 관련
     // 횟수
-    this.Num_of_skill_uses = 0;
-    this.Num_of_run_uses = 0;
+    this.num_of_skill_uses = 0;
+    this.num_of_run_uses = 0;
   }
   Heal(amount, logs) {
-    const randNum = Math.floor(Math.random() * amount);
+    const randNum = Math.floor(Math.random() * amount) + 1;
     this.hp += randNum;
     logs.push(chalk.greenBright.bold(`체력이 ${randNum} 회복 되었습니다!`));
   }
@@ -52,15 +51,15 @@ class Player extends Character {
 
   async Skill_Fireball(target, logs, count) {
     this.mp--;
-    this.Num_of_skill_uses++; // 사용횟수 체크
-    AchievementFunc.SorcererAchievement(this);
-    await LoadDelay(2000, `..점점 커지는 중..`);
+    this.num_of_skill_uses++; // 사용횟수 체크
+    achievementFunc.sorcererAchievement(this);
+    await loadDelay(2000, `..점점 커지는 중..`);
     const skillAtk = Math.floor((Math.random() * (this.maxAtt - this.minAtt) + this.minAtt)) * 3; // 3배 공격
     target.hp -= skillAtk;
     logs.push(chalk.blueBright(`[${count}] 몬스터에게 ${skillAtk}의 마법피해를 입혔습니다.`));
   }
 
-  ClearReward() {
+  clearReward() {
     let str = "";
     let num = 0;
 
@@ -73,7 +72,7 @@ class Player extends Character {
     else {
       rand = Math.floor(Math.random() * 6 + 1);
       switch (rand) {
-        case 1: // 최대 체력 증가시키기        
+        case 1: // 최대 체력 증가시키기
           num = Math.floor(Math.random() * (50 - 20 + 1) + 20);
           this.hp += num;
 
@@ -100,20 +99,30 @@ class Player extends Character {
         case 4: // 연속 공격확률업        
           num = Math.floor(Math.random() * (7 - 3 + 1) + 3);
           this.doubleAtk += num;
-
+          if(this.doubleAtk >= 100) { 
+            num = this.doubleAtk - 100;
+            this.doubleAtk = 100;
+          }
           str = `연속 공격확률이 ${num}%`;
           break;
 
         case 5: // 방어 확률업
           num = Math.floor(Math.random() * (10 - 3 + 1) + 3);
           this.defence += num;
-
+          if(this.defence >= 100) { 
+            num = this.defence - 100;
+            this.defence = 100;
+          }
           str = `방어 확률이 ${num}%`;
           break;
 
         case 6: // 도망 확률업
           num = Math.floor(Math.random() * (3 - 1 + 1) + 1);
           this.run += num;
+          if(this.run >= 100) { 
+            num = this.run - 100;
+            this.run = 100;
+          }
 
           str = `도망 확률이 ${num}%`;
           break;
@@ -124,11 +133,11 @@ class Player extends Character {
 }
 
 class Monster extends Character {
-  constructor(hp, minAtt, stage) {
+  constructor(hp = 30, minAtt = 5, stage) {
     super(hp, minAtt); // 부모로부터 먼저 데이터를 가져오고
     this.hp = hp * stage;
-    this.minAtt = this.minAtt * stage;
-    this.maxAtt = this.maxAtt * stage;
+    this.minAtt = this.minAtt + Math.floor(this.minAtt * 0.7 * stage); 
+    this.maxAtt = this.maxAtt + Math.floor(this.maxAtt * 0.7 * stage);
     this._stage = stage;
   }
   get stage() {
@@ -173,14 +182,8 @@ const battle = async (stage, player, monster) => {
 
   logs.push(chalk.magenta(`야생의 몬스터와 마추졌습니다!!\n`));
 
-  let reLog = function () {
-    console.clear();
-    displayStatus(stage, player, monster);
-    logs.forEach((log) => console.log(log));
-  };
-
   while (player.hp > 0) {
-    reLog();
+    reLog(logs, stage, player, monster);
 
     // 클리어 조건
     if (monster.hp <= 0)
@@ -203,7 +206,7 @@ const battle = async (stage, player, monster) => {
 
       case '2': // 더블 공격
         count++;
-        if (Probability(player.doubleAtk)) {
+        if (probability(player.doubleAtk)) {
           logs.push(chalk.green(`[${count}] 연속공격에 성공했습니다.`));
           player.attack(monster, logs, count);
           player.attack(monster, logs, count);
@@ -217,7 +220,7 @@ const battle = async (stage, player, monster) => {
 
       case '3': // 방어하기
         count++;
-        result = Probability(player.defence);
+        result = probability(player.defence);
         player.Defence(result, monster, logs, count);
 
         if (result === false) {
@@ -228,8 +231,8 @@ const battle = async (stage, player, monster) => {
       case '4': // 도망가자-선우정아
         count++;
         logs.push(chalk.green(`[${count}] 도망을 시도합니다....`));
-        reLog();
-        result = Probability(player.run);
+        reLog(logs, stage, player, monster);
+        result = probability(player.run);
         await Escape(result, monster, logs, count, player);
 
         if (result === false) {
@@ -239,7 +242,7 @@ const battle = async (stage, player, monster) => {
 
       case '5':
         if (player.mp <= 0) {
-          await LoadDelay(500, chalk.gray(`마나가 부족합니다.`));
+          await loadDelay(500, chalk.gray(`마나가 부족합니다.`));
           break;
         }
 
@@ -253,7 +256,7 @@ const battle = async (stage, player, monster) => {
           case '1':
             count++;
             logs.push(chalk.green(`[${count}] 화염구를 만들기 시작했습니다!!`));
-            reLog();
+            reLog(logs, stage, player, monster);
             await player.Skill_Fireball(monster, logs, count);
             monster.attack(player, logs, count);
             break;
@@ -268,12 +271,18 @@ const battle = async (stage, player, monster) => {
         logs.push(chalk.red(`올바른 선택을 하세요`));
     }
   }
-  reLog();
+  reLog(logs, stage, player, monster);
 };
 
+// 로그를 다시찍어줄 함수
+function reLog(logs, stage, player, monster) {
+  console.clear();
+  displayStatus(stage, player, monster);
+  logs.forEach((log) => console.log(log));
+}
 
 // 확률의 성공여부를 확인하는 함수
-function Probability(probability) {
+function probability(probability) {
   const rand = Math.floor(Math.random() * 100) + 1; // 1 ~ 100까지수 추출
   if (rand <= probability) { // 정한 확률보다 작거나 같으면(확률범위에 들어오면) 성공
     return true;
@@ -283,8 +292,8 @@ function Probability(probability) {
 
 // 도망 함수
 async function Escape(result, monster, logs, count, player) {
-  player.Num_of_run_uses++;
-  AchievementFunc.RunAchievement(player);
+  player.num_of_run_uses++;
+  achievementFunc.runAchievement(player);
   // 1초뒤에 스테이지 클리어 조건 실행
   return new Promise(function (resolve) {
     setTimeout(() => {
@@ -298,7 +307,7 @@ async function Escape(result, monster, logs, count, player) {
 }
 
 // 딜레이 표현을 하기 위해 만든 함수
-async function LoadDelay(Time, str = "") {
+async function loadDelay(Time, str = "") {
   console.log(str);
   return new Promise(function (resolve) {
     setTimeout(() => resolve(), Time);
@@ -308,47 +317,23 @@ async function LoadDelay(Time, str = "") {
 // 게임을 시작하는 함수
 export async function startGame() {
   console.clear();
-  const player = new Player(100, 5, 25, 55, 100);
+  const player = new Player();
   let stage = 1;
 
   while (stage <= 10) {
-    const monster = new Monster(30, 5, stage);
+    const monster = new Monster(30, 20, stage);
     await battle(stage, player, monster);
 
     // 스테이지 클리어 및 게임 종료 조건
     if (player.hp > 0) {
       stage++;
-      player.ClearReward();
-      AchievementFunc.StageClearAchievement(stage); // 스테이지 클리어시 업적달성
-      await LoadDelay(2000, `${chalk.greenBright(`스테이지 이동 중....`)}`);
+      player.clearReward();
+      achievementFunc.stageClearAchievement(stage); // 스테이지 클리어시 업적달성
+      await loadDelay(2000, `${chalk.greenBright(`스테이지 이동 중....`)}`);
     } else {
-      await LoadDelay(2000, `${chalk.bgRed(`플레이어가 죽었습니다...`)}`);
+      await loadDelay(2000, `${chalk.bgRed(`플레이어가 죽었습니다...`)}`);
       break;
     }
   }
   console.clear();
-  start();
 }
-
-// 업적 달성 조건을 보고 업적달성하는 함수
-const AchievementFunc = {
-  StageClearAchievement: async function (stage) {
-    if (stage > 1 && stage <= 2) {
-      AchievementPush('첫 스테이지 클리어', '1.', " 첫 스테이지 클리어")
-    } else if (stage >= 11) {
-      AchievementPush('킹 슬레이어', '2.', " 킹 슬레이어");
-    }
-  },
-  SorcererAchievement: async function (player) {
-    if (player.Num_of_skill_uses === 1) {
-      AchievementPush('당신은 마법사?', '3.', " 당신은 마법사?");
-    } else if (player.Num_of_skill_uses === 5) {
-      AchievementPush('대마법사', '4.', " 대마법사");
-    }
-  },
-  RunAchievement: async function (player) {
-    if (player.Num_of_run_uses === 5) {
-      AchievementPush('도망자', '5.', " 도망가자-선우정아");
-    }
-  }
-}; 

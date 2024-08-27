@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import figlet from 'figlet';
 import readlineSync from 'readline-sync';
 import { startGame } from "./game.js";
+import { ChllengeSuccessDisplay } from "./achievement.js";
 
 // 로비 화면을 출력하는 함수
 function displayLobby() {
@@ -43,19 +44,19 @@ function displayLobby() {
 }
 
 // 유저 입력을 받아 처리하는 함수
-function handleUserInput() {
+async function handleUserInput() {
     const choice = readlineSync.question('입력: ');
 
     switch (choice) {
         case '1':
             console.log(chalk.green('게임을 시작합니다.'));
             // 여기에서 새로운 게임 시작 로직을 구현
-            startGame();
+            await startGame();
             break;
         case '2':
             // console.log(chalk.yellow('구현 준비중입니다.. 게임을 시작하세요'));
             // 업적 확인하기 로직을 구현
-            ChllengeSuccessDisplay();
+            await ChllengeSuccessDisplay();
             break;
         case '3':
             console.log(chalk.blue('구현 준비중입니다.. 게임을 시작하세요'));
@@ -73,39 +74,12 @@ function handleUserInput() {
     }
 }
 
-const Achievement = [];
-export function AchievementPush(str, AchievementNum, AchievementStr) {
-    if (Achievement.includes(chalk.magenta(AchievementNum) + AchievementStr) === false) {
-        console.log(chalk.bgGray(`\n업적 : ${str}\n`));
-        Achievement.push(chalk.magenta(AchievementNum) + AchievementStr);
-    }
-}
-
-// 업적창을 띄어주는 함수입니다.
-function ChllengeSuccessDisplay() {
-    console.clear();
-    console.log(chalk.bgRedBright('===================달성 업적===================\n'));
-    Achievement.sort();
-    Achievement.forEach((log) => console.log(log));
-
-    console.log(chalk.yellow('\n메인 메뉴로 돌아가기 1을 입력하세요...'));
-    const choice = readlineSync.question('입력: ');
-    switch (choice) {
-        case '1':
-            console.log(chalk.green('게임을 시작합니다.'));
-            // 여기에서 새로운 게임 시작 로직을 구현
-            start();
-            break;
-        default:
-            console.log(chalk.red('올바른 선택을 하세요.'));
-            ChllengeSuccessDisplay(); // 유효하지 않은 입력일 경우 다시 입력 받음
-    }
-}
-
 // 게임 시작 함수
-export function start() {
-    displayLobby();
-    handleUserInput();
+export async function start() {
+    while(true){
+        displayLobby();
+        await handleUserInput();
+    }
 }
 
 // 게임 실행
