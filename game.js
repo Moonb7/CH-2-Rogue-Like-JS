@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import readlineSync from 'readline-sync';
-import { achievementFunc } from "./achievement.js";
+import { achievementFunc } from './achievement.js';
 
 class Character {
   constructor(hp, minAtt) {
@@ -10,8 +10,7 @@ class Character {
     this.maxAtt = Math.floor(this.minAtt * this.attack_Multiplier); // 최소 공격력에 일정 배율을 곱해주어 최대공격력을 구했습니다.
   }
 
-  attack(target) {
-  }
+  attack(target) {}
 }
 
 class Player extends Character {
@@ -41,7 +40,9 @@ class Player extends Character {
 
   Defence(result, target, logs, count) {
     if (result) {
-      const defenceAtk = Math.floor((Math.random() * (this.maxAtt - this.minAtt) + this.minAtt) * 0.6);
+      const defenceAtk = Math.floor(
+        (Math.random() * (this.maxAtt - this.minAtt) + this.minAtt) * 0.6,
+      );
       target.hp -= defenceAtk;
       logs.push(chalk.cyanBright(`[${count}] 몬스터에게 ${defenceAtk}의 방어피해를 입혔습니다.`));
     } else {
@@ -54,22 +55,22 @@ class Player extends Character {
     this.num_of_skill_uses++; // 사용횟수 체크
     achievementFunc.sorcererAchievement(this);
     await loadDelay(2000, `..점점 커지는 중..`);
-    const skillAtk = Math.floor((Math.random() * (this.maxAtt - this.minAtt) + this.minAtt)) * 3; // 3배 공격
+    const skillAtk = Math.floor(Math.random() * (this.maxAtt - this.minAtt) + this.minAtt) * 3; // 3배 공격
     target.hp -= skillAtk;
     logs.push(chalk.blueBright(`[${count}] 몬스터에게 ${skillAtk}의 마법피해를 입혔습니다.`));
   }
 
   clearReward() {
-    let str = "";
+    let str = '';
     let num = 0;
 
     let rand = Math.floor(Math.random() * 100 + 1);
-    if (rand <= 20) { // 만약 20% 확률에 걸리면 마나획득
+    if (rand <= 20) {
+      // 만약 20% 확률에 걸리면 마나획득
       num = 1;
       this.mp += num;
       str = `마나를 ${num}`;
-    }
-    else {
+    } else {
       rand = Math.floor(Math.random() * 6 + 1);
       switch (rand) {
         case 1: // 최대 체력 증가시키기
@@ -87,7 +88,7 @@ class Player extends Character {
           str = `최소 공격력이 ${num}`;
           break;
 
-        case 3: // 공격력 배율 증가시키기        
+        case 3: // 공격력 배율 증가시키기
           const randomValue = Math.random() * (1 - 0.1) + 0.1;
           num = Math.round(randomValue * 100) / 100; // 소수점 2자리까지 구하기
           this.attack_Multiplier += num;
@@ -96,10 +97,10 @@ class Player extends Character {
           str = `최대 공격력 배율이 ${num}`;
           break;
 
-        case 4: // 연속 공격확률업        
+        case 4: // 연속 공격확률업
           num = Math.floor(Math.random() * (7 - 3 + 1) + 3);
           this.doubleAtk += num;
-          if(this.doubleAtk >= 100) { 
+          if (this.doubleAtk >= 100) {
             num = this.doubleAtk - 100;
             this.doubleAtk = 100;
           }
@@ -109,7 +110,7 @@ class Player extends Character {
         case 5: // 방어 확률업
           num = Math.floor(Math.random() * (10 - 3 + 1) + 3);
           this.defence += num;
-          if(this.defence >= 100) { 
+          if (this.defence >= 100) {
             num = this.defence - 100;
             this.defence = 100;
           }
@@ -119,7 +120,7 @@ class Player extends Character {
         case 6: // 도망 확률업
           num = Math.floor(Math.random() * (3 - 1 + 1) + 1);
           this.run += num;
-          if(this.run >= 100) { 
+          if (this.run >= 100) {
             num = this.run - 100;
             this.run = 100;
           }
@@ -136,7 +137,7 @@ class Monster extends Character {
   constructor(hp = 30, minAtt = 5, stage) {
     super(hp, minAtt); // 부모로부터 먼저 데이터를 가져오고
     this.hp = hp * stage;
-    this.minAtt = this.minAtt + Math.floor(this.minAtt * 0.7 * stage); 
+    this.minAtt = this.minAtt + Math.floor(this.minAtt * 0.7 * stage);
     this.maxAtt = this.maxAtt + Math.floor(this.maxAtt * 0.7 * stage);
     this._stage = stage;
   }
@@ -160,12 +161,12 @@ function displayStatus(stage, player, monster) {
   console.log(chalk.magentaBright(`\n=== Current Status ===`));
   console.log(
     chalk.cyanBright(`| Stage: ${stage} `) +
-    chalk.blueBright(
-      `| 플레이어 정보 HP : ${player.hp}, Attack : ${player.minAtt}-${player.maxAtt}, Mp : ${player.mp} `,
-    ) +
-    chalk.redBright(
-      `| 몬스터 정보 HP : ${monster.hp}, Attack : ${monster.minAtt}-${monster.maxAtt}|`,
-    ),
+      chalk.blueBright(
+        `| 플레이어 정보 HP : ${player.hp}, Attack : ${player.minAtt}-${player.maxAtt}, Mp : ${player.mp} `,
+      ) +
+      chalk.redBright(
+        `| 몬스터 정보 HP : ${monster.hp}, Attack : ${monster.minAtt}-${monster.maxAtt}|`,
+      ),
   );
   console.log(chalk.magentaBright(`=====================\n`));
 }
@@ -177,8 +178,7 @@ const battle = async (stage, player, monster) => {
   let result = false; // 확률의 성공여부를 확인할 변수
 
   // 스테이지에 올라갈때마다
-  if (stage > 1)
-    player.Heal(20, logs);
+  if (stage > 1) player.Heal(20, logs);
 
   logs.push(chalk.magenta(`야생의 몬스터와 마추졌습니다!!\n`));
 
@@ -186,8 +186,7 @@ const battle = async (stage, player, monster) => {
     reLog(logs, stage, player, monster);
 
     // 클리어 조건
-    if (monster.hp <= 0)
-      break;
+    if (monster.hp <= 0) break;
 
     console.log(
       chalk.green(
@@ -246,11 +245,7 @@ const battle = async (stage, player, monster) => {
           break;
         }
 
-        console.log(
-          chalk.green(
-            `\n1. 파이어볼`,
-          ),
-        );
+        console.log(chalk.green(`\n1. 파이어볼`));
         choice = readlineSync.question('스킬을 선택하세요 ');
         switch (choice) {
           case '1':
@@ -284,7 +279,8 @@ function reLog(logs, stage, player, monster) {
 // 확률의 성공여부를 확인하는 함수
 function probability(probability) {
   const rand = Math.floor(Math.random() * 100) + 1; // 1 ~ 100까지수 추출
-  if (rand <= probability) { // 정한 확률보다 작거나 같으면(확률범위에 들어오면) 성공
+  if (rand <= probability) {
+    // 정한 확률보다 작거나 같으면(확률범위에 들어오면) 성공
     return true;
   }
   return false;
@@ -297,17 +293,19 @@ async function Escape(result, monster, logs, count, player) {
   // 1초뒤에 스테이지 클리어 조건 실행
   return new Promise(function (resolve) {
     setTimeout(() => {
-      result ? logs.push(chalk.bgBlue(`성공적으로 도망쳤습니다!!`)) : logs.push(chalk.gray(`[${count}] 도망에 실패 하였습니다.`));
+      result
+        ? logs.push(chalk.bgBlue(`성공적으로 도망쳤습니다!!`))
+        : logs.push(chalk.gray(`[${count}] 도망에 실패 하였습니다.`));
       if (result) {
         monster.hp = 0;
       }
       resolve(result);
     }, 1500);
-  })
+  });
 }
 
 // 딜레이 표현을 하기 위해 만든 함수
-async function loadDelay(Time, str = "") {
+async function loadDelay(Time, str = '') {
   console.log(str);
   return new Promise(function (resolve) {
     setTimeout(() => resolve(), Time);
